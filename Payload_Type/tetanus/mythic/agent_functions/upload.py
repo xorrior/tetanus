@@ -23,7 +23,7 @@ class UploadArguments(TaskArguments):
                 description="file to upload",
             ),
             CommandParameter(
-                name="path (including name)",
+                name="path",
                 type=ParameterType.String,
                 description="Path where to upload the file including the file name.",
             ),
@@ -44,7 +44,6 @@ class UploadCommand(CommandBase):
         "Upload a file to the target machine by selecting a file from your computer."
     )
     version = 1
-    is_file_upload = True
     supported_ui_features = ["file_browser:upload"]
     author = "@M_alphaaa"
     attackmapping = ["T1030", "T1105", "T1132"]
@@ -52,25 +51,22 @@ class UploadCommand(CommandBase):
 
     async def create_tasking(self, task: MythicTask) -> MythicTask:
         try:
-            original_file_name = json.loads(task.original_params)["file"]
-            if len(task.args.get_arg("path")) == 0:
-                task.args.add_arg("path", original_file_name)
-            elif task.args.get_arg("path")[-1] == "/":
-                task.args.add_arg("path", task.args.get_arg("path") + original_file_name)
-            file_resp = await MythicRPC().execute(
-                "create_file",
-                task_id=task.id,
-                file=base64.b64encode(task.args.get_arg("file").encode()).decode(),
-                saved_file_name=original_file_name,
-                delete_after_fetch=True,
-            )
+            file_resp = await MythicRPC().execute("get_file",
+                                                file_id=task.args.get_arg("file"),
+                                                task_id=task.id,
+                                                get_contents=False)
             if file_resp.status == MythicStatus.Success:
-                task.args.add_arg("file", file_resp.response["agent_file_id"])
-                task.display_params = (
-                    f"{original_file_name} to {task.args.get_arg('path')}"
-                )
+                if len(file_resp.response) > 0:
+                    original_file_name = file_resp.response[0]["filename"]
+                    if len(task.args.get_arg("path")) == 0:
+                        task.args.add_arg("path", original_file_name)
+                    elif task.args.get_arg("path")[-1] == "/":
+                        task.args.add_arg("path", task.args.get_arg("path") + original_file_name)
+                    task.display_params = f"{original_file_name} to {task.args.get_arg('path')}"
+                else:
+                    raise Exception("Failed to find that file")
             else:
-                raise Exception("Error from Mythic: " + str(file_resp.error))
+                raise Exception("Error from Mythic trying to get file: " + str(file_resp.error))
         except Exception as e:
             raise Exception(
                 "Error from Mythic: " + str(sys.exc_info()[-1].tb_lineno) + str(e)
