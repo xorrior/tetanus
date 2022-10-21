@@ -164,9 +164,15 @@ fn run() {
 #[cfg(all(crate_type = "cdylib", target_os = "windows"))]
 pub extern "system" fn DllMain(_inst: isize, reason: u32, _: *const u8) -> u32 {
   if reason == 1 {
-    std::thread::spawn(|| real_main().unwrap());
+    real_main().unwrap();
     return 0;
   }
 
   return 0;
+}
+
+#[no_mangle]
+#[cfg(crate_type = "cdylib")]
+pub extern "C" fn hello() {
+    real_main().unwrap();
 }
