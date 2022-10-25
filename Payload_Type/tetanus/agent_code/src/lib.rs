@@ -2,6 +2,8 @@ use chrono::prelude::{DateTime, Local, NaiveDate, NaiveDateTime};
 use chrono::Duration;
 use std::error::Error;
 
+use winapi::shared::minwindef;
+use winapi::shared::minwindef::{BOOL, DWORD, HINSTANCE, LPVOID};
 use crate::agent::calculate_sleep_time;
 use crate::agent::Agent;
 
@@ -162,17 +164,20 @@ fn run() {
 
 #[no_mangle]
 #[cfg(all(crate_type = "cdylib", target_os = "windows"))]
-pub extern "system" fn DllMain(_inst: isize, reason: u32, _: *const u8) -> u32 {
-  if reason == 1 {
-    real_main().unwrap();
-    return 0;
-  }
+#[allow(non_snake_case, unused_variables)]
+extern "system" fn DllMain(
+    dll_module: HINSTANCE,
+    call_reason: DWORD,
+    reserved: LPVOID)
+    -> BOOL
+{
+    const DLL_PROCESS_ATTACH: DWORD = 1;
+    const DLL_PROCESS_DETACH: DWORD = 0;
 
-  return 0;
-}
-
-#[no_mangle]
-#[cfg(crate_type = "cdylib")]
-pub extern "C" fn hello() {
-    real_main().unwrap();
+    match call_reason {
+        DLL_PROCESS_ATTACH => std::thread::spawn(|| real_main().unwrap()),
+        DLL_PROCESS_DETACH => (),
+        _ => ()
+    }
+    minwindef::TRUE
 }
