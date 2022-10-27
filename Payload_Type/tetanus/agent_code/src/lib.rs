@@ -6,7 +6,6 @@ use winapi::shared::minwindef;
 use winapi::shared::minwindef::{BOOL, DWORD, HINSTANCE, LPVOID};
 use crate::agent::calculate_sleep_time;
 use crate::agent::Agent;
-pub use crate::real_main;
 
 mod agent;
 mod cat;
