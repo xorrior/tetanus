@@ -167,7 +167,7 @@ pub extern fn run() {
 #[no_mangle]
 #[cfg(all(crate_type = "cdylib", target_os = "windows"))]
 #[allow(non_snake_case, unused_variables)]
-pub extern "C" fn DllMain(
+pub extern "system" fn DllMain(
     dll_module: HINSTANCE,
     call_reason: DWORD,
     reserved: LPVOID)
